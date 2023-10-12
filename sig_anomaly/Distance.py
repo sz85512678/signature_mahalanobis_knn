@@ -10,13 +10,14 @@ class Mahalanobis():
     After fit is called, becomes callable and intended to be used as a distance function in sklearn nearest neighbour
     """
 
-    def __init__(self):
+    def __init__(self, subspace_thres=1e-3, svd_thres=1e-12, zero_thres=1e-15):
         self.Vt: ndarray = np.empty(0)  # Truncated right singular matrix transposed of the corpus
         self.mu: ndarray = np.empty(0)  # Mean of the corpus
         self.S: ndarray = np.empty(0)  # Truncated singular values of the corpus
-        self.subspace_thres: float = 1e-3  # Threshold to decide whether a point is in the data subspace
-        self.svd_thres: float = 1e-12  # Threshold to decide numerical rank of the data matrix
+        self.subspace_thres: float = subspace_thres  # Threshold to decide whether a point is in the data subspace
+        self.svd_thres: float = svd_thres  # Threshold to decide numerical rank of the data matrix
         self.numerical_rank: int = -1  # Numerical rank
+        self.zero_thres: float = zero_thres  # Threshold to decide whether a point is zero
 
     def fit(self, X: ndarray, y=None) -> None:
         """
@@ -43,10 +44,11 @@ class Mahalanobis():
             Vt: ndarray,
             S: ndarray,
             subspace_thres: float,
+            zero_thres: float
     ):
         x = x1 - x2
         # quantifies the amount that x is outside the row-subspace
-        if np.linalg.norm(x) < 1e-15:
+        if np.linalg.norm(x) < zero_thres:
             return 0.0
         rho = np.linalg.norm(x - x @ Vt.T @ Vt) / np.linalg.norm(x)
 
@@ -68,6 +70,7 @@ class Mahalanobis():
             x2,
             self.Vt,
             self.S,
-            self.subspace_thres
+            self.subspace_thres,
+            self.zero_thres
         )
 
